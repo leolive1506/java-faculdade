@@ -3,6 +3,7 @@ package org.example;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import org.example.db.UserDB;
+import org.example.db.UserReport;
 import org.example.entities.User;
 
 import javax.swing.*;
@@ -37,13 +38,14 @@ public class Prova {
             screen.addField("Peso");
             screen.addField("IMC");
 
-            screen.addButton("Calcular IMC", save());
+            screen.addButton("Calcular IMC", calcBmi());
             screen.addButton("Cadastrar", save());
             screen.addButton("Alterar", update());
+            screen.addButton("Remover", delete());
             screen.addButton("Listagem", getUsersListener());
-            screen.addButton("Relatorio", save());
+            screen.addButton("Relatorio", report());
 
-            screen.addTextArea("Listagem", getUsers());
+            screen.addTextArea("Listagem", db.list());
         } catch (Exception exception) {
             System.out.println(exception.getMessage());
         }
@@ -64,7 +66,6 @@ public class Prova {
             JTextField emergencyPhone = (JTextField) screen.findField("Telefone Emergência").field();
             JTextField height = (JTextField) screen.findField("Altura").field();
             JTextField weight = (JTextField) screen.findField("Peso").field();
-            JTextField bmi = (JTextField) screen.findField("IMC").field();
 
             User user = new User(
                 fullName.getText(),
@@ -82,6 +83,8 @@ public class Prova {
 
 
             db.insert(user);
+
+            getUsers();
         };
     }
 
@@ -99,35 +102,112 @@ public class Prova {
             JTextField emergencyPhone = (JTextField) screen.findField("Telefone Emergência").field();
             JTextField height = (JTextField) screen.findField("Altura").field();
             JTextField weight = (JTextField) screen.findField("Peso").field();
-            JTextField bmi = (JTextField) screen.findField("IMC").field();
 
             User user = new User(
-                    fullName.getText(),
-                    address.getText(),
-                    phone.getText(),
-                    cpf.getText(),
-                    (String) bloodType.getSelectedItem(),
-                    (String) rhFactor.getSelectedItem(),
-                    (String) course.getSelectedItem(),
-                    emergencyContact.getText(),
-                    emergencyPhone.getText(),
-                    Double.parseDouble(height.getText()),
-                    Double.parseDouble(weight.getText())
+                fullName.getText(),
+                address.getText(),
+                phone.getText(),
+                cpf.getText(),
+                (String) bloodType.getSelectedItem(),
+                (String) rhFactor.getSelectedItem(),
+                (String) course.getSelectedItem(),
+                emergencyContact.getText(),
+                emergencyPhone.getText(),
+                Double.parseDouble(height.getText()),
+                Double.parseDouble(weight.getText())
             );
 
 
             db.update(Integer.parseInt(id.getText()), user);
+            getUsers();
+        };
+    }
+
+    public ActionListener calcBmi() {
+        return e -> {
+            JTextField height = (JTextField) screen.findField("Altura").field();
+            JTextField weight = (JTextField) screen.findField("Peso").field();
+            JTextField bmi = (JTextField) screen.findField("IMC").field();
+
+            Double total = Double.parseDouble(weight.getText()) / (Double.parseDouble(height.getText()) * Double.parseDouble(height.getText()));
+
+            bmi.setText(String.valueOf(total));
+
+            String message = "";
+            if (total >= 18.5 && total <= 25) {
+                message = "Peso ideal";
+            }
+
+            if (total > 25) {
+                message = "Você está acima do peso ideal!";
+            }
+
+            if (total < 18.5) {
+                message = "Você está abaixo do peso ideal";
+            }
+
+            JOptionPane.showMessageDialog(null, message);
         };
     }
 
     public ActionListener getUsersListener() {
         return e -> {
-            String users = this.getUsers();
-            System.out.println(users);
+            getUsers();
         };
     }
 
-    public String getUsers() {
-        return this.db.list();
+    public ActionListener delete() {
+        return e -> {
+            JTextField id = (JTextField) screen.findField("Id").field();
+
+            db.delete(Integer.parseInt(id.getText()));
+            getUsers();
+        };
+    }
+
+    public ActionListener report() {
+        return e -> {
+            JScrollPane area = (JScrollPane) screen.findField("Listagem").field();
+
+            UserReport report = db.report();
+
+            System.out.println(report);
+            String users = String.format("""
+                - O maior peso cadastrado: %.2f kg, nome da pessoa: %s e Tipo Sanguíneo|Fator RH: %s%s
+                - O menor peso cadastrado: %.2f kg, nome da pessoa: %s e Tipo Sanguíneo|Fator RH: %s%s
+                - A média de todos os pesos cadastrados: %.2f kg
+                - A maior altura cadastrada: %.2f m, nome da pessoa: %s e o curso: %s
+                - A menor altura cadastrada: %.2f m, nome da pessoa: %s e o curso: %s
+                - A média de todas as alturas cadastradas: %.2f m
+                - A média de todos os IMC cadastrados: %.2f
+                - O maior IMC cadastrado: %.2f, nome da pessoa: %s
+                - O menor IMC cadastrado: %.2f, nome da pessoa: %s
+            """,
+                report.maxWeight, report.maxWeightName, report.maxWeightBlood, report.maxWeightRhFactor,
+                report.minWeight, report.minWeightName, report.minWeightBlood, report.minWeightRhFactor,
+                report.avgWeight,
+                report.maxHeight, report.maxHeightName, report.maxHeightCourse,
+                report.minHeight, report.minHeightName, report.minHeightCourse,
+                report.avgHeight,
+                report.avgBMI,
+                report.maxBMI, report.maxBMIName,
+                report.minBMI, report.minBMIName
+            );
+
+            System.out.println(users);
+            if (area.getViewport().getView() instanceof JTextArea textArea) {
+                textArea.setText(users);
+            }
+        };
+    }
+
+    public void getUsers() {
+        JScrollPane area = (JScrollPane) screen.findField("Listagem").field();
+
+        String users = this.db.list();
+
+        if (area.getViewport().getView() instanceof JTextArea textArea) {
+            textArea.setText(users);
+        }
     }
 }

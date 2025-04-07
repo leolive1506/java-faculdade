@@ -75,7 +75,7 @@ public class UserDB {
         }
     }
 
-    public void remover(int id) {
+    public void delete(int id) {
         try {
             PreparedStatement stmt = conexao.prepareStatement("DELETE FROM users WHERE id=?");
             stmt.setInt(1, id);
@@ -107,32 +107,80 @@ public class UserDB {
         return result.toString();
     }
 
-    public String listarUsuarioPorId(int id) {
-        StringBuilder resultado = new StringBuilder();
-        try {
-            PreparedStatement stmt = conexao.prepareStatement("SELECT * FROM users WHERE id=?");
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
+    public UserReport report() {
+        String sql = """
+        SELECT 
+            (SELECT MAX(weight) FROM users) AS max_weight,
+            (SELECT full_name FROM users WHERE weight = (SELECT MAX(weight) FROM users) LIMIT 1) AS max_weight_name,
+            (SELECT blood_type FROM users WHERE weight = (SELECT MAX(weight) FROM users) LIMIT 1) AS max_weight_blood,
+            (SELECT rh_factor FROM users WHERE weight = (SELECT MAX(weight) FROM users) LIMIT 1) AS max_weight_rh_factor,
+
+            (SELECT MIN(weight) FROM users) AS min_weight,
+            (SELECT full_name FROM users WHERE weight = (SELECT MIN(weight) FROM users) LIMIT 1) AS min_weight_name,
+            (SELECT blood_type FROM users WHERE weight = (SELECT MIN(weight) FROM users) LIMIT 1) AS min_weight_blood,
+            (SELECT rh_factor FROM users WHERE weight = (SELECT MIN(weight) FROM users) LIMIT 1) AS min_weight_rh_factor,
+
+            (SELECT AVG(weight) FROM users) AS avg_weight,
+
+            (SELECT MAX(height) FROM users) AS max_height,
+            (SELECT full_name FROM users WHERE height = (SELECT MAX(height) FROM users) LIMIT 1) AS max_height_name,
+            (SELECT course FROM users WHERE height = (SELECT MAX(height) FROM users) LIMIT 1) AS max_height_course,
+
+            (SELECT MIN(height) FROM users) AS min_height,
+            (SELECT full_name FROM users WHERE height = (SELECT MIN(height) FROM users) LIMIT 1) AS min_height_name,
+            (SELECT course FROM users WHERE height = (SELECT MIN(height) FROM users) LIMIT 1) AS min_height_course,
+
+            (SELECT AVG(height) FROM users) AS avg_height,
+
+            (SELECT AVG(bmi) FROM users) AS avg_bmi,
+
+            (SELECT MAX(bmi) FROM users) AS max_bmi,
+            (SELECT full_name FROM users WHERE bmi = (SELECT MAX(bmi) FROM users) LIMIT 1) AS max_bmi_name,
+
+            (SELECT MIN(bmi) FROM users) AS min_bmi,
+            (SELECT full_name FROM users WHERE bmi = (SELECT MIN(bmi) FROM users) LIMIT 1) AS min_bmi_name
+        """;
+
+        try (PreparedStatement stmt = conexao.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
 
             if (rs.next()) {
-                resultado.append("ID: ").append(rs.getInt("id"))
-                        .append("\nNome: ").append(rs.getString("full_name"))
-                        .append("\nEndereço: ").append(rs.getString("address"))
-                        .append("\nTelefone: ").append(rs.getString("phone"))
-                        .append("\nCPF: ").append(rs.getString("cpf"))
-                        .append("\nTipo Sanguíneo: ").append(rs.getString("blood_type"))
-                        .append(rs.getString("rh_factor"))
-                        .append("\nCurso: ").append(rs.getString("course"))
-                        .append("\nContato Emergência: ").append(rs.getString("emergency_contact"))
-                        .append("\nTelefone Emergência: ").append(rs.getString("emergency_phone"))
-                        .append("\nAltura: ").append(rs.getFloat("height"))
-                        .append("\nPeso: ").append(rs.getFloat("weight"))
-                        .append("\nIMC: ").append(rs.getFloat("bmi"))
-                        .append("\n");
+                return new UserReport(
+                        rs.getFloat("max_weight"),
+                        rs.getString("max_weight_name"),
+                        rs.getString("max_weight_blood"),
+                        rs.getString("max_weight_rh_factor"),
+
+                        rs.getFloat("min_weight"),
+                        rs.getString("min_weight_name"),
+                        rs.getString("min_weight_blood"),
+                        rs.getString("min_weight_rh_factor"),
+
+                        rs.getFloat("avg_weight"),
+
+                        rs.getFloat("max_height"),
+                        rs.getString("max_height_name"),
+                        rs.getString("max_height_course"),
+
+                        rs.getFloat("min_height"),
+                        rs.getString("min_height_name"),
+                        rs.getString("min_height_course"),
+
+                        rs.getFloat("avg_height"),
+
+                        rs.getFloat("avg_bmi"),
+                        rs.getFloat("max_bmi"),
+                        rs.getString("max_bmi_name"),
+                        rs.getFloat("min_bmi"),
+                        rs.getString("min_bmi_name")
+                );
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return resultado.toString();
+
+        return null;
     }
+
 }

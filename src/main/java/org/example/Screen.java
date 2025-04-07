@@ -24,6 +24,12 @@ public class Screen extends JFrame {
     public Field findField(String label) {
         return fields.stream()
                 .filter(field -> {
+                    if (field.type() == FieldType.TEXT_AREA) {
+                        if (field.field().getBorder() instanceof javax.swing.border.TitledBorder border) {
+                            return Objects.equals(border.getTitle(), label);
+                        }
+                    }
+
                     if (field.label() == null) {
                         return false;
                     }
