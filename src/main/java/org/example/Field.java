@@ -19,6 +19,12 @@ public class Field {
         this.fieldType = FieldType.TEXT;
     }
 
+    public Field(JComponent area) {
+        this.label = null;
+        this.field = area;
+        this.fieldType = FieldType.TEXT_AREA;
+    }
+
     public JLabel label() {
         return this.label;
     }

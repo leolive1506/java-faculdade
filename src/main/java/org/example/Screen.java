@@ -52,6 +52,19 @@ public class Screen extends JFrame {
         this.fields.add(newLabel);
     }
 
+    public void addTextArea(String label, String text) {
+        JTextArea area = new JTextArea(text);
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+        JScrollPane scrollPane = new JScrollPane(area);
+
+        scrollPane.setBorder(BorderFactory.createTitledBorder(label));
+
+        this.fields.add(new Field(scrollPane));
+    }
+
+
     public void addFormattedField(String label, String formatter) throws ParseException {
         Field newField = new Field(
             new JLabel(label),
@@ -100,6 +113,11 @@ public class Screen extends JFrame {
 
             if (element.field() != null) {
                 element.field().setBounds(this.width / 2, positionY.get(), 200, 25);
+                getContentPane().add(element.field());
+            }
+
+            if (element.field() != null && element.type() == FieldType.TEXT_AREA) {
+                element.field().setBounds(10, positionY.get(), width, 100);
                 getContentPane().add(element.field());
             }
 

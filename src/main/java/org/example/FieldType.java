@@ -2,6 +2,7 @@ package org.example;
 
 public enum FieldType {
     TEXT("Text"),
+    TEXT_AREA("Text_Area"),
     INPUT("Input"),
     BUTTON("Button"),
     BOX("Button");
